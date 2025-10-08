@@ -1,0 +1,130 @@
+# Default values for n8n
+
+replicaCount: 1
+
+image:
+  repository: n8nio/n8n
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+podAnnotations: {}
+
+podSecurityContext:
+  fsGroup: 1000
+
+securityContext:
+  runAsUser: 1000
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+
+# Service configuration
+service:
+  type: ClusterIP  # Options: ClusterIP, NodePort, LoadBalancer
+  port: 5678
+  targetPort: 5678
+  nodePort: 30678  # Only used if type is NodePort (30000-32767)
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: "nginx"
+  annotations: {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: n8n.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+  #  - secretName: n8n-tls
+  #    hosts:
+  #      - n8n.example.com
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
+
+# Persistence
+persistence:
+  enabled: false
+# Environment variables
+env:
+  - name: N8N_BASIC_AUTH_ACTIVE
+    value: "true"
+  - name: N8N_BASIC_AUTH_USER
+    value: "admin"
+  - name: N8N_BASIC_AUTH_PASSWORD
+    value: "changeme"
+  - name: N8N_HOST
+    value: "0.0.0.0"
+  - name: N8N_PORT
+    value: "5678"
+  - name: N8N_PROTOCOL
+    value: "http"
+  - name: WEBHOOK_URL
+    value: "http://n8n.example.com/"
+  - name: GENERIC_TIMEZONE
+    value: "Asia/Bangkok"
+  # Database configuration (optional - defaults to SQLite)
+  # - name: DB_TYPE
+  #   value: "postgresdb"
+  # - name: DB_POSTGRESDB_HOST
+  #   value: "postgres"
+  # - name: DB_POSTGRESDB_PORT
+  #   value: "5432"
+  # - name: DB_POSTGRESDB_DATABASE
+  #   value: "n8n"
+  # - name: DB_POSTGRESDB_USER
+  #   value: "n8n"
+  # - name: DB_POSTGRESDB_PASSWORD
+  #   valueFrom:
+  #     secretKeyRef:
+  #       name: n8n-secrets
+  #       key: db-password
+
+# Secret environment variables
+# envFrom:
+#   - secretRef:
+#       name: n8n-secrets
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+# Liveness and Readiness probes
+livenessProbe:
+  enabled: true
+  httpGet:
+    path: /healthz
+    port: 5678
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
+
+readinessProbe:
+  enabled: true
+  httpGet:
+    path: /healthz
+    port: 5678
+  initialDelaySeconds: 10
+  periodSeconds: 10
+  timeoutSeconds: 5
+  successThreshold: 1
+  failureThreshold: 3
